@@ -667,6 +667,83 @@
                 font-size: 0.8rem;
             }
         }
+
+        /* Print Styles */
+        @media print {
+            /* Force dark theme colors to print */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            /* Hide non-essential elements */
+            header,
+            .upload-section,
+            .filter-bar,
+            .dashboard,
+            .chevron,
+            .issue-actions {
+                display: none !important;
+            }
+
+            /* Show issues container */
+            .issues-container {
+                display: block !important;
+            }
+
+            /* Expand all page sections */
+            .page-issues {
+                display: block !important;
+            }
+
+            /* Remove sticky positioning */
+            .filter-bar {
+                position: static;
+            }
+
+            /* Prevent page breaks inside cards */
+            .issue-card,
+            .page-section {
+                break-inside: avoid;
+            }
+
+            /* Adjust container for print */
+            .container {
+                max-width: 100%;
+                padding: 10px;
+            }
+
+            /* Ensure backgrounds print */
+            body {
+                background: var(--bg-dark) !important;
+            }
+
+            .issue-card {
+                background: var(--bg-dark) !important;
+            }
+
+            .page-section {
+                background: var(--bg-card) !important;
+            }
+
+            .page-header {
+                background: var(--bg-section) !important;
+            }
+
+            .site-wide-section {
+                background: linear-gradient(135deg, #2d1b3d 0%, #1a1a2e 100%) !important;
+            }
+
+            .fix-recommendation {
+                background: linear-gradient(135deg, #1a3a2a 0%, #0d1f17 100%) !important;
+            }
+
+            /* Affected pages - expand for print */
+            .affected-pages[open] ul {
+                max-height: none;
+                overflow: visible;
+            }
+        }
     </style>
 </head>
 <body>
@@ -730,6 +807,7 @@
                     <button class="btn btn-secondary" id="expandAllBtn">Expand All</button>
                     <button class="btn btn-secondary" id="collapseAllBtn">Collapse All</button>
                     <button class="btn btn-primary" id="resetFiltersBtn">Reset Filters</button>
+                    <button class="btn btn-primary" id="exportPdfBtn">📄 Export PDF</button>
                 </div>
             </div>
         </div>
@@ -1020,6 +1098,43 @@ a:hover, a:focus {
         const severityFilter = document.getElementById('severityFilter');
         const ruleFilter = document.getElementById('ruleFilter');
         const searchInput = document.getElementById('searchInput');
+
+        // Load report from URL parameter or default file
+        async function loadReportFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const reportUrl = params.get('report');
+            
+            if (reportUrl) {
+                try {
+                    const response = await fetch(reportUrl);
+                    if (response.ok) {
+                        reportData = await response.json();
+                        processReport();
+                        return true;
+                    }
+                } catch (e) {
+                    console.error('Failed to load report from URL:', e);
+                }
+            }
+            
+            // Try loading default report.json if no URL parameter
+            try {
+                const response = await fetch('report.json');
+                if (response.ok) {
+                    reportData = await response.json();
+                    processReport();
+                    return true;
+                }
+            } catch (e) {
+                // No default report, show upload UI
+                console.log('No default report found, showing upload UI');
+            }
+            
+            return false;
+        }
+
+        // Initialize - try to load report from URL or default
+        loadReportFromUrl();
 
         // File upload handler
         fileInput.addEventListener('change', (e) => {
@@ -1387,6 +1502,23 @@ a:hover, a:focus {
             ruleFilter.value = 'all';
             searchInput.value = '';
             applyFilters();
+        });
+
+        // Export PDF
+        document.getElementById('exportPdfBtn').addEventListener('click', () => {
+            // Expand all sections before printing
+            document.querySelectorAll('.page-header').forEach(header => {
+                header.classList.add('expanded');
+                header.nextElementSibling.classList.add('visible');
+            });
+            
+            // Expand all affected pages details
+            document.querySelectorAll('.affected-pages').forEach(details => {
+                details.setAttribute('open', '');
+            });
+            
+            // Trigger print dialog
+            window.print();
         });
     </script>
 </body>
