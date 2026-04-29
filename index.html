@@ -1,1525 +1,761 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accessibility Report Generator</title>
-    <style>
-        :root {
-            --critical: #d32f2f;
-            --serious: #f57c00;
-            --moderate: #fbc02d;
-            --minor: #1976d2;
-            --bg-dark: #1a1a2e;
-            --bg-card: #16213e;
-            --bg-section: #0f3460;
-            --text-primary: #eaeaea;
-            --text-secondary: #b0b0b0;
-            --accent: #e94560;
-            --success: #4caf50;
-            --border: #2a2a4a;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: var(--bg-dark);
-            color: var(--text-primary);
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            text-align: center;
-            padding: 40px 20px;
-            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-section) 100%);
-            border-bottom: 2px solid var(--accent);
-            margin-bottom: 30px;
-        }
-
-        header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            color: var(--text-primary);
-        }
-
-        header p {
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-        }
-
-        /* File Upload Section */
-        .upload-section {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 40px;
-            text-align: center;
-            border: 2px dashed var(--border);
-            margin-bottom: 30px;
-            transition: border-color 0.3s ease;
-        }
-
-        .upload-section:hover {
-            border-color: var(--accent);
-        }
-
-        .upload-section.hidden {
-            display: none;
-        }
-
-        .upload-section label {
-            display: inline-block;
-            padding: 15px 40px;
-            background: var(--accent);
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            font-weight: 600;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .upload-section label:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
-        }
-
-        .upload-section input[type="file"] {
-            display: none;
-        }
-
-        .upload-section p {
-            margin-top: 15px;
-            color: var(--text-secondary);
-        }
-
-        /* Summary Dashboard */
-        .dashboard {
-            display: none;
-            margin-bottom: 30px;
-        }
-
-        .dashboard.visible {
-            display: block;
-        }
-
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .dashboard-header h2 {
-            font-size: 1.5rem;
-        }
-
-        .report-meta {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 25px;
-            text-align: center;
-            border-left: 4px solid var(--accent);
-        }
-
-        .stat-card.critical { border-left-color: var(--critical); }
-        .stat-card.serious { border-left-color: var(--serious); }
-        .stat-card.moderate { border-left-color: var(--moderate); }
-        .stat-card.minor { border-left-color: var(--minor); }
-
-        .stat-card .number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .stat-card.critical .number { color: var(--critical); }
-        .stat-card.serious .number { color: var(--serious); }
-        .stat-card.moderate .number { color: var(--moderate); }
-        .stat-card.minor .number { color: var(--minor); }
-
-        .stat-card .label {
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 1px;
-        }
-
-        /* Top Rules */
-        .top-rules {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-
-        .top-rules h3 {
-            margin-bottom: 15px;
-            color: var(--text-primary);
-        }
-
-        .rule-bar {
-            display: flex;
-            align-items: center;
-            margin-bottom: 12px;
-            gap: 15px;
-        }
-
-        .rule-bar .rule-name {
-            width: 200px;
-            font-family: monospace;
-            font-size: 0.9rem;
-            color: var(--accent);
-        }
-
-        .rule-bar .bar-container {
-            flex: 1;
-            height: 24px;
-            background: var(--bg-dark);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .rule-bar .bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent), var(--serious));
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding-right: 10px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            min-width: 40px;
-        }
-
-        /* Filter Bar */
-        .filter-bar {
-            display: none;
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 30px;
-            position: sticky;
-            top: 10px;
-            z-index: 100;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .filter-bar.visible {
-            display: block;
-        }
-
-        .filter-controls {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .filter-group label {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .filter-group select,
-        .filter-group input {
-            padding: 10px 15px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            background: var(--bg-dark);
-            color: var(--text-primary);
-            font-size: 0.95rem;
-            min-width: 180px;
-        }
-
-        .filter-group select:focus,
-        .filter-group input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-
-        .filter-actions {
-            display: flex;
-            gap: 10px;
-            margin-left: auto;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 600;
-            transition: all 0.2s ease;
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #c73e54;
-        }
-
-        .btn-secondary {
-            background: var(--bg-section);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-        }
-
-        .btn-secondary:hover {
-            background: var(--border);
-        }
-
-        /* Issues Sections */
-        .issues-container {
-            display: none;
-        }
-
-        .issues-container.visible {
-            display: block;
-        }
-
-        .section-title {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--border);
-        }
-
-        .section-title h2 {
-            font-size: 1.4rem;
-        }
-
-        .section-title .badge {
-            background: var(--accent);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        /* Site-Wide Issues */
-        .site-wide-section {
-            background: linear-gradient(135deg, #2d1b3d 0%, #1a1a2e 100%);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
-            border: 1px solid #4a2c5a;
-        }
-
-        .site-wide-section .section-title {
-            border-bottom-color: #4a2c5a;
-        }
-
-        .site-wide-section .section-title .badge {
-            background: #9c27b0;
-        }
-
-        /* Page Accordion */
-        .page-section {
-            background: var(--bg-card);
-            border-radius: 12px;
-            margin-bottom: 15px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 25px;
-            cursor: pointer;
-            background: var(--bg-section);
-            transition: background 0.2s ease;
-        }
-
-        .page-header:hover {
-            background: #1a4a7a;
-        }
-
-        .page-header .page-url {
-            font-family: monospace;
-            font-size: 0.95rem;
-            color: var(--accent);
-            word-break: break-all;
-            flex: 1;
-        }
-
-        .page-header .page-stats {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .page-header .issue-count {
-            background: var(--bg-dark);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .page-header .chevron {
-            font-size: 1.2rem;
-            transition: transform 0.3s ease;
-            color: var(--text-secondary);
-        }
-
-        .page-header.expanded .chevron {
-            transform: rotate(180deg);
-        }
-
-        .page-issues {
-            display: none;
-            padding: 20px 25px;
-        }
-
-        .page-issues.visible {
-            display: block;
-        }
-
-        /* Individual Issue */
-        .issue-card {
-            background: var(--bg-dark);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--border);
-        }
-
-        .issue-card.critical { border-left-color: var(--critical); }
-        .issue-card.serious { border-left-color: var(--serious); }
-        .issue-card.moderate { border-left-color: var(--moderate); }
-        .issue-card.minor { border-left-color: var(--minor); }
-
-        .issue-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .issue-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .issue-title .rule-id {
-            font-family: monospace;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .impact-badge {
-            padding: 3px 10px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .impact-badge.critical { background: var(--critical); color: white; }
-        .impact-badge.serious { background: var(--serious); color: white; }
-        .impact-badge.moderate { background: var(--moderate); color: #333; }
-        .impact-badge.minor { background: var(--minor); color: white; }
-
-        .issue-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .issue-actions a {
-            color: var(--accent);
-            text-decoration: none;
-            font-size: 0.85rem;
-            padding: 5px 10px;
-            border: 1px solid var(--accent);
-            border-radius: 4px;
-            transition: all 0.2s ease;
-        }
-
-        .issue-actions a:hover {
-            background: var(--accent);
-            color: white;
-        }
-
-        .issue-description {
-            color: var(--text-secondary);
-            margin-bottom: 15px;
-            font-size: 0.95rem;
-        }
-
-        .issue-element {
-            margin-bottom: 15px;
-        }
-
-        .issue-element label {
-            display: block;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            margin-bottom: 5px;
-            letter-spacing: 0.5px;
-        }
-
-        .issue-element pre {
-            background: #0d0d1a;
-            padding: 15px;
-            border-radius: 6px;
-            overflow-x: auto;
-            font-size: 0.85rem;
-            color: #7fdbca;
-            border: 1px solid var(--border);
-        }
-
-        .issue-selector {
-            font-family: monospace;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            background: var(--bg-section);
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            word-break: break-all;
-        }
-
-        /* Fix Recommendation */
-        .fix-recommendation {
-            background: linear-gradient(135deg, #1a3a2a 0%, #0d1f17 100%);
-            border-radius: 8px;
-            padding: 20px;
-            border: 1px solid #2d5a3d;
-        }
-
-        .fix-recommendation h4 {
-            color: var(--success);
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .fix-recommendation h4::before {
-            content: "💡";
-        }
-
-        .fix-recommendation p {
-            color: var(--text-secondary);
-            margin-bottom: 15px;
-            font-size: 0.95rem;
-        }
-
-        .fix-recommendation pre {
-            background: #0a1510;
-            padding: 15px;
-            border-radius: 6px;
-            overflow-x: auto;
-            font-size: 0.85rem;
-            color: #98c379;
-            border: 1px solid #2d5a3d;
-        }
-
-        /* Affected Pages List (for site-wide issues) */
-        .affected-pages {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid var(--border);
-        }
-
-        .affected-pages summary {
-            cursor: pointer;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .affected-pages ul {
-            margin-top: 10px;
-            padding-left: 20px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .affected-pages li {
-            font-family: monospace;
-            font-size: 0.8rem;
-            color: var(--accent);
-            margin-bottom: 5px;
-        }
-
-        /* Loading State */
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-secondary);
-        }
-
-        .loading::after {
-            content: "";
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--accent);
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 10px;
-            vertical-align: middle;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-secondary);
-        }
-
-        .empty-state h3 {
-            margin-bottom: 10px;
-            color: var(--text-primary);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            header h1 {
-                font-size: 1.8rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .filter-controls {
-                flex-direction: column;
-            }
-
-            .filter-group select,
-            .filter-group input {
-                width: 100%;
-            }
-
-            .filter-actions {
-                margin-left: 0;
-                width: 100%;
-            }
-
-            .filter-actions .btn {
-                flex: 1;
-            }
-
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-
-            .rule-bar .rule-name {
-                width: 120px;
-                font-size: 0.8rem;
-            }
-        }
-
-        /* Print Styles */
-        @media print {
-            /* Force dark theme colors to print */
-            * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-
-            /* Hide non-essential elements */
-            header,
-            .upload-section,
-            .filter-bar,
-            .dashboard,
-            .chevron,
-            .issue-actions {
-                display: none !important;
-            }
-
-            /* Show issues container */
-            .issues-container {
-                display: block !important;
-            }
-
-            /* Expand all page sections */
-            .page-issues {
-                display: block !important;
-            }
-
-            /* Remove sticky positioning */
-            .filter-bar {
-                position: static;
-            }
-
-            /* Prevent page breaks inside cards */
-            .issue-card,
-            .page-section {
-                break-inside: avoid;
-            }
-
-            /* Adjust container for print */
-            .container {
-                max-width: 100%;
-                padding: 10px;
-            }
-
-            /* Ensure backgrounds print */
-            body {
-                background: var(--bg-dark) !important;
-            }
-
-            .issue-card {
-                background: var(--bg-dark) !important;
-            }
-
-            .page-section {
-                background: var(--bg-card) !important;
-            }
-
-            .page-header {
-                background: var(--bg-section) !important;
-            }
-
-            .site-wide-section {
-                background: linear-gradient(135deg, #2d1b3d 0%, #1a1a2e 100%) !important;
-            }
-
-            .fix-recommendation {
-                background: linear-gradient(135deg, #1a3a2a 0%, #0d1f17 100%) !important;
-            }
-
-            /* Affected pages - expand for print */
-            .affected-pages[open] ul {
-                max-height: none;
-                overflow: visible;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WCAG 2.1 AA Audit Report — hrvatske-ceste.hr</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #161616;
+    --surface2: #1f1f1f;
+    --border: #2a2a2a;
+    --text: #e8e8e8;
+    --text-muted: #888;
+    --text-dim: #555;
+    --critical: #ff4444;
+    --serious: #ff8c00;
+    --moderate: #f5c518;
+    --pass: #22c55e;
+    --accent: #3b82f6;
+    --accent-dim: rgba(59,130,246,0.12);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .report-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 48px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .report-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--critical), var(--serious), var(--moderate));
+  }
+  .report-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .report-title {
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--text);
+    margin-bottom: 6px;
+    letter-spacing: -0.02em;
+  }
+  .report-title strong { font-weight: 600; color: #fff; }
+  .report-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .report-subtitle a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  /* SUMMARY CARDS */
+  .summary-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .stat-card {
+    background: var(--surface);
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .stat-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+  .stat-value {
+    font-size: 36px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+  .stat-value.red { color: var(--critical); }
+  .stat-value.orange { color: var(--serious); }
+  .stat-value.yellow { color: var(--moderate); }
+  .stat-value.white { color: #fff; }
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  /* MAIN LAYOUT */
+  .main { padding: 40px 48px; max-width: 1200px; }
+
+  /* SECTION HEADERS */
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* VERDICT BANNER */
+  .verdict {
+    background: rgba(255,68,68,0.08);
+    border: 1px solid rgba(255,68,68,0.25);
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin-bottom: 40px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .verdict-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .verdict-text { font-size: 13px; line-height: 1.7; color: var(--text); }
+  .verdict-text strong { color: #fff; }
+
+  /* ISSUE TABLE */
+  .issues-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 48px;
+  }
+  .issue-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .issue-header {
+    display: grid;
+    grid-template-columns: 120px 1fr 80px 80px 80px;
+    gap: 16px;
+    align-items: center;
+    padding: 14px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .issue-header:hover { background: var(--surface2); }
+  .issue-body {
+    display: none;
+    padding: 0 20px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .issue-body.open { display: block; }
+  .issue-row.open .issue-header { background: var(--surface2); }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .badge.critical { background: rgba(255,68,68,0.15); color: var(--critical); border: 1px solid rgba(255,68,68,0.3); }
+  .badge.serious { background: rgba(255,140,0,0.12); color: var(--serious); border: 1px solid rgba(255,140,0,0.3); }
+  .badge.moderate { background: rgba(245,197,24,0.1); color: var(--moderate); border: 1px solid rgba(245,197,24,0.25); }
+
+  .issue-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .issue-wcag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--accent-dim);
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-align: center;
+  }
+  .issue-pages {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+  .issue-pages strong { color: var(--text); font-size: 14px; }
+
+  .expand-icon {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: right;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* Issue body content */
+  .issue-desc {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .issue-section-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin: 16px 0 8px;
+  }
+  .code-block {
+    background: #0a0a0a;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: #b4b4b4;
+    line-height: 1.6;
+    overflow-x: auto;
+  }
+  .code-block .tag { color: #569cd6; }
+  .code-block .attr { color: #9cdcfe; }
+  .code-block .val { color: #ce9178; }
+  .examples-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .examples-list li {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding-left: 14px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .examples-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .fix-box {
+    background: rgba(34,197,94,0.05);
+    border: 1px solid rgba(34,197,94,0.15);
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-size: 12px;
+    color: #86efac;
+    line-height: 1.6;
+  }
+  .fix-box strong { color: #4ade80; }
+
+  /* FINDINGS SUMMARY */
+  .key-findings {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+  .finding-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+  }
+  .finding-title {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 8px;
+    color: #fff;
+  }
+  .finding-body {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+
+  /* SCOPE NOTE */
+  .scope-note {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin-bottom: 40px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+
+  /* FOOTER */
+  footer {
+    padding: 32px 48px;
+    border-top: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Filter bar */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 6px 14px;
+    border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+</style>
 </head>
 <body>
-    <header>
-        <h1>🔍 Accessibility Report</h1>
-        <p>Analyze and fix accessibility issues across your website</p>
-    </header>
 
-    <div class="container">
-        <!-- Upload Section -->
-        <div class="upload-section" id="uploadSection">
-            <label for="fileInput">
-                📂 Upload Accessibility JSON Report
-            </label>
-            <input type="file" id="fileInput" accept=".json">
-            <p>Upload an axe DevTools JSON export to generate the report</p>
-        </div>
+<div class="report-header">
+  <div class="report-meta">WCAG 2.1 AA Automated Audit Report &nbsp;·&nbsp; Pa11y CI + axe-core + htmlcs</div>
+  <h1 class="report-title">Accessibility Audit — <strong>hrvatske-ceste.hr</strong></h1>
+  <div class="report-subtitle">
+    <a href="https://hrvatske-ceste.hr" target="_blank">https://hrvatske-ceste.hr</a>
+    &nbsp;·&nbsp; Scanned: 29 April 2026 &nbsp;·&nbsp; Standard: WCAG 2.1 Level AA
+  </div>
+</div>
 
-        <!-- Dashboard -->
-        <div class="dashboard" id="dashboard">
-            <div class="dashboard-header">
-                <h2>📊 Summary Dashboard</h2>
-                <div class="report-meta" id="reportMeta"></div>
-            </div>
+<div class="summary-bar">
+  <div class="stat-card">
+    <div class="stat-label">Pages Scanned</div>
+    <div class="stat-value white">105</div>
+    <div class="stat-sub">Croatian language (/hr)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Pages Passing</div>
+    <div class="stat-value red">0</div>
+    <div class="stat-sub">100% failure rate</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Violations</div>
+    <div class="stat-value orange">1,675</div>
+    <div class="stat-sub">~16 per page average</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Distinct Issue Types</div>
+    <div class="stat-value yellow">13</div>
+    <div class="stat-sub">3 site-wide, 10 targeted</div>
+  </div>
+</div>
 
-            <div class="stats-grid" id="statsGrid"></div>
+<div class="main">
 
-            <div class="top-rules" id="topRules">
-                <h3>🏆 Top Failing Rules</h3>
-                <div id="topRulesContent"></div>
-            </div>
-        </div>
+  <div class="verdict">
+    <div class="verdict-icon">⚠</div>
+    <div class="verdict-text">
+      <strong>The site does not conform to WCAG 2.1 Level AA.</strong> Zero pages passed automated testing across 105 scanned URLs. However, the raw error count is significantly inflated by three site-wide structural issues — duplicate SVG IDs in the navigation, the accessibility widget's own unlabelled buttons, and low-contrast text in the header — that affect every single page. Fixing those three issues would eliminate the majority of the 1,675 recorded violations. The remaining issues are mostly contained, targeted fixes rather than widespread problems.
+    </div>
+  </div>
 
-        <!-- Filter Bar -->
-        <div class="filter-bar" id="filterBar">
-            <div class="filter-controls">
-                <div class="filter-group">
-                    <label for="severityFilter">Severity</label>
-                    <select id="severityFilter">
-                        <option value="all">All Severities</option>
-                        <option value="critical">Critical</option>
-                        <option value="serious">Serious</option>
-                        <option value="moderate">Moderate</option>
-                        <option value="minor">Minor</option>
-                    </select>
-                </div>
+  <div class="scope-note">
+    <strong>Scope note:</strong> This is an automated audit covering the Croatian-language pages (/hr). Automated tools detect approximately 30–40% of WCAG issues. Issues not detectable by automation include: keyboard focus order and trapping, screen reader announcement quality, meaningful alternative text quality, cognitive load, and reflow at 320px. A complete conformance assessment requires manual testing. PDF documents linked from the site were not tested.
+  </div>
 
-                <div class="filter-group">
-                    <label for="ruleFilter">Rule Type</label>
-                    <select id="ruleFilter">
-                        <option value="all">All Rules</option>
-                    </select>
-                </div>
+  <!-- KEY FINDINGS -->
+  <div class="section-label">Key Findings</div>
+  <div class="key-findings">
+    <div class="finding-card">
+      <div class="finding-title">🔴 3 Issues Affect Every Page</div>
+      <div class="finding-body">Colour contrast failures in the page header, duplicate SVG IDs in the language switcher flags, and unlabelled buttons in the accessibility widget (#a11y-panel) are present on all 105 scanned pages. Fixing these three root causes removes the bulk of the violation count.</div>
+    </div>
+    <div class="finding-card">
+      <div class="finding-title">⚠ Accessibility Widget Fails Its Own Test</div>
+      <div class="finding-body">The "Alati za pristupačnosti" overlay panel — intended to improve accessibility — itself generates WCAG 4.1.2 violations because its line-height toggle buttons have no accessible names. This is a known problem with third-party accessibility overlays and is ironic given their purpose.</div>
+    </div>
+    <div class="finding-card">
+      <div class="finding-title">📋 Forms Are Keyboard-Inaccessible</div>
+      <div class="finding-body">Multiple filter forms (news, procurement, employment, EU projects) use JavaScript onchange auto-submit without a submit button. Keyboard-only users cannot submit these forms, violating WCAG 3.2.2. This affects core site functionality.</div>
+    </div>
+    <div class="finding-card">
+      <div class="finding-title">🎬 Video Has No Captions</div>
+      <div class="finding-body">The NAPCORE EU project page embeds a video (/videos/napcore.mp4) without captions or a transcript. This is a WCAG 1.2.2 critical violation. All prerecorded video content must have synchronised captions.</div>
+    </div>
+  </div>
 
-                <div class="filter-group">
-                    <label for="searchInput">Search</label>
-                    <input type="text" id="searchInput" placeholder="Search selector or source...">
-                </div>
+  <!-- ISSUES -->
+  <div class="section-label">Detailed Issues (click to expand)</div>
 
-                <div class="filter-actions">
-                    <button class="btn btn-secondary" id="expandAllBtn">Expand All</button>
-                    <button class="btn btn-secondary" id="collapseAllBtn">Collapse All</button>
-                    <button class="btn btn-primary" id="resetFiltersBtn">Reset Filters</button>
-                    <button class="btn btn-primary" id="exportPdfBtn">📄 Export PDF</button>
-                </div>
-            </div>
-        </div>
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterIssues('all', this)">All (13)</button>
+    <button class="filter-btn" onclick="filterIssues('critical', this)">Critical (1)</button>
+    <button class="filter-btn" onclick="filterIssues('serious', this)">Serious (10)</button>
+    <button class="filter-btn" onclick="filterIssues('moderate', this)">Moderate (2)</button>
+  </div>
 
-        <!-- Issues Container -->
-        <div class="issues-container" id="issuesContainer">
-            <!-- Site-Wide Issues -->
-            <div class="site-wide-section" id="siteWideSection">
-                <div class="section-title">
-                    <h2>🌐 Site-Wide Issues</h2>
-                    <span class="badge" id="siteWideBadge">0</span>
-                </div>
-                <p style="color: var(--text-secondary); margin-bottom: 20px;">
-                    These issues appear on <strong>every page</strong> tested. Fixing them will improve accessibility across your entire site.
-                </p>
-                <div id="siteWideIssues"></div>
-            </div>
+  <div class="issues-grid" id="issuesGrid">
 
-            <!-- Page-Specific Issues -->
-            <div class="section-title">
-                <h2>📄 Issues by Page</h2>
-                <span class="badge" id="pagesBadge">0 pages</span>
-            </div>
-            <div id="pagesContainer"></div>
-        </div>
+    <!-- 1. VIDEO CAPTION -->
+    <div class="issue-row" data-impact="critical">
+      <div class="issue-header" onclick="toggleIssue(this)">
+        <span class="badge critical">Critical</span>
+        <span class="issue-name">Video element has no captions</span>
+        <span class="issue-wcag">1.2.2</span>
+        <span class="issue-pages"><strong>1</strong><br>page</span>
+        <span class="expand-icon">▼ EXPAND</span>
+      </div>
+      <div class="issue-body">
+        <div class="issue-desc">Prerecorded video content must have synchronised captions so that deaf and hard-of-hearing users can access the audio content.</div>
+        <div class="issue-section-title">Affected element</div>
+        <div class="code-block"><span class="tag">&lt;video</span> <span class="attr">src</span>=<span class="val">"/videos/napcore.mp4"</span> <span class="attr">controls</span><span class="tag">&gt;&lt;/video&gt;</span><br>— on /hr/eu-projekti/instrumenti-za-povezivanje-europe/6-napcore-move-b4-...</div>
+        <div class="issue-section-title">How to fix</div>
+        <div class="fix-box">Add a <strong>&lt;track kind="captions" src="napcore.vtt" srclang="hr"&gt;</strong> element inside the &lt;video&gt; tag with a WebVTT caption file. If captions cannot be produced quickly, add a text transcript on the same page as an interim measure. This is a Level A requirement.</div>
+      </div>
     </div>
 
-    <script>
-        // Fix recommendations database
-        const fixRecommendations = {
-            'button-name': {
-                description: 'Buttons must have discernible text that describes their purpose. Screen readers announce this text to users.',
-                fix: `<!-- Add visible text -->
-<button>Submit Form</button>
+    <!-- 2. COLOR CONTRAST -->
+    <div class="issue-row" data-impact="serious">
+      <div class="issue-header" onclick="toggleIssue(this)">
+        <span class="badge serious">Serious</span>
+        <span class="issue-name">Insufficient colour contrast</span>
+        <span class="issue-wcag">1.4.3</span>
+        <span class="issue-pages"><strong>105</strong><br>pages</span>
+        <span class="expand-icon">▼ EXPAND</span>
+      </div>
+      <div class="issue-body">
+        <div class="issue-desc">Text elements must have a contrast ratio of at least 4.5:1 against their background (3:1 for large text ≥18pt or ≥14pt bold). Multiple elements fail this throughout the site.</div>
+        <div class="issue-section-title">Examples (all pages)</div>
+        <ul class="examples-list">
+          <li>Page header: H1 and H2 text over a background image — white text but insufficient due to semi-transparent overlay</li>
+          <li>Breadcrumb navigation links (e.g. "Početna stranica", "EU projekti") in the page header region</li>
+          <li>Cookie notice: body text, "Saznaj više" link, and "Shvaćam" button</li>
+          <li>News card dates and category tags (e.g. "Oglasi", "17/04/2026")</li>
+          <li>Homepage category headings ("EU projekti", "Plan nabave", etc.) over background</li>
+          <li>Contact page: form dropdown placeholder text (1:1 ratio — invisible)</li>
+          <li>Google Maps attribution text and controls on the contact page</li>
+        </ul>
+        <div class="issue-section-title">How to fix</div>
+        <div class="fix-box"><strong>Page header:</strong> Darken the overlay behind header text, or darken the text itself. The main H1/H2 text appears to be white on a light-ish image background without sufficient contrast. Use a colour contrast checker (e.g. WebAIM Contrast Checker) to verify 4.5:1.<br><br><strong>Cookie banner:</strong> The cookie notice uses a light grey text on a near-white background. Darken the text to at least #595959 on white.<br><br><strong>Contact form dropdown:</strong> The custom select "-- Odaberite temu upita --" has a 1:1 contrast ratio (white text on white background). This is completely invisible without CSS.</div>
+      </div>
+    </div>
 
-<!-- Or use aria-label for icon buttons -->
-<button aria-label="Close menu">
-  <svg>...</svg>
-</button>
+    <!-- 3. DUPLICATE IDs -->
+    <div class="issue-row" data-impact="serious">
+      <div class="issue-header" onclick="toggleIssue(this)">
+        <span class="badge serious">Serious</span>
+        <span class="issue-name">Duplicate id attribute values</span>
+        <span class="issue-wcag">4.1.1</span>
+        <span class="issue-pages"><strong>105</strong><br>pages</span>
+        <span class="expand-icon">▼ EXPAND</span>
+      </div>
+      <div class="issue-body">
+        <div class="issue-desc">ID attributes must be unique within a page. Duplicate IDs break ARIA relationships, break label associations, and confuse assistive technologies that use IDs to navigate the DOM.</div>
+        <div class="issue-section-title">Examples</div>
+        <ul class="examples-list">
+          <li><strong>id="flag-icons-hr"</strong> — the Croatian flag SVG is inlined twice in the page (navigation renders the same SVG for the desktop and mobile versions)</li>
+          <li><strong>id="flag-icons-gb"</strong> — same issue with the UK flag for language switching</li>
+          <li><strong>id="Group", id="Vector", id="Vector_2", id="Vector_3"</strong> — SVG icon elements inlined multiple times with the same IDs</li>
+          <li><strong>id="nav_element_139"</strong> — procurement navigation card duplicated on some pages</li>
+        </ul>
+        <div class="issue-section-title">How to fix</div>
+        <div class="fix-box">For SVG flags/icons: use the <strong>&lt;symbol&gt; + &lt;use&gt;</strong> pattern — define the SVG once with unique IDs, then reference it with &lt;use href="#flag-icons-hr"&gt;. This avoids duplication entirely.<br><br>For the mobile/desktop navigation duplication: render only one nav and use CSS to show/hide it, rather than rendering two separate navs with the same content and IDs.</div>
+      </div>
+    </div>
 
-<!-- Or use aria-labelledby -->
-<button aria-labelledby="btn-label">
-  <span id="btn-label" class="sr-only">Search</span>
-  <svg>...</svg>
-</button>`
-            },
-            'color-contrast': {
-                description: 'Text must have sufficient color contrast against its background (4.5:1 for normal text, 3:1 for large text) to be readable by users with low vision.',
-                fix: `/* Ensure sufficient contrast ratio */
-/* Use a contrast checker tool */
+    <!-- 4. BUTTON NO NAME -->
+    <div class="issue-row" data-impact="serious">
+      <div class="issue-header" onclick="toggleIssue(this)">
+        <span class="badge serious">Serious</span>
+        <span class="issue-name">Buttons with no accessible name</span>
+        <span class="issue-wcag">4.1.2</span>
+        <span class="issue-pages"><strong>105</strong><br>pages</span>
+        <span class="expand-icon">▼ EXPAND</span>
+      </div>
+      <div class="issue-body">
+        <div class="issue-desc">Button elements must have an accessible name so screen readers can announce their purpose. These are the accessibility widget's own controls — a particularly notable failure.</div>
+        <div class="issue-section-title">Affected elements (in #a11y-panel)</div>
+        <div class="code-block"><span class="tag">&lt;button</span> <span class="attr">class</span>=<span class="val">"a11y-widget__option js-a11y-line is-active"</span> <span class="attr">data-line</span>=<span class="val">"normal"</span> <span class="attr">aria-pressed</span>=<span class="val">"true"</span><span class="tag">&gt;</span><br>  &lt;span class="a11y-icon"&gt;...&lt;/span&gt; <span class="tag">&lt;!-- no text, no aria-label --&gt;</span><br><span class="tag">&lt;/button&gt;</span><br><br>Same pattern for data-line="large" and data-line="xlarge"</div>
+        <div class="issue-section-title">How to fix</div>
+        <div class="fix-box">Add <strong>aria-label</strong> to each button:<br>• data-line="normal" → aria-label="Normal line height"<br>• data-line="large" → aria-label="Large line height"<br>• data-line="xlarge" → aria-label="Extra large line height"<br><br>Similarly, the font size buttons (A, A, A) should have descriptive aria-labels.</div>
+      </div>
+    </div>
 
-/* Example: Change low contrast text */
-.low-contrast {
-  color: #767676; /* 4.54:1 against white - passes AA */
+    <!-- 5. LINK IN TEXT BLOCK -->
+    <div class="issue-row" data-impact="serious">
+      <div class="issue-header" onclick="toggleIssue(this)">
+        <span class="badge serious">Serious</span>
+        <span class="issue-name">Links not distinguishable without colour</span>
+        <span class="issue-wcag">1.4.1</span>
+        <span class="issue-pages"><strong>35</strong><br>pages</span>
+        <span class="expand-icon">▼ EXPAND</span>
+      </div>
+      <div class="issue-body">
+        <div class="issue-desc">Links within blocks of text must be distinguishable from surrounding non-link text through means other than colour alone (e.g. underline, bold, border-bottom).</div>
+        <div class="issue-section-title">Affected element</div>
+        <div class="code-block">Cookie notice: <span class="tag">&lt;a</span> <span class="attr">href</span>=<span class="val">"http://www.aboutcookies.org/"</span> <span class="attr">target</span>=<span class="val">"_blank"</span><span class="tag">&gt;</span>Saznaj više<span class="tag">&lt;/a&gt;</span><br>— appears in text but has no underline, only colour difference</div>
+        <div class="issue-section-title">How to fix</div>
+        <div class="fix-box">Add <strong>text-decoration: underline</strong> to the "Saznaj više" link in the cookie notice. Alternatively, add a visible border-bottom. This ensures users who cannot perceive colour differences (colour-blind users) can still identify the link.</div>
+      </div>
+    </div>
+
+    <!-- 6. FORM NO SUBMIT -->
+    <div class="issue-row" data-impact="serious">
+      <div class="issue-header" onclick="toggleIssue(this)">
+        <span class="badge serious">Serious</span>
+        <span class="issue-name">Forms without submit button</span>
+        <span class="issue-wcag">3.2.2</span>
+        <span class="issue-pages"><strong>7</strong><br>pages</span>
+        <span class="expand-icon">▼ EXPAND</span>
+      </div>
+      <div class="issue-body">
+        <div class="issue-desc">Forms that auto-submit on input change (without a submit button) prevent keyboard-only users from submitting them. Changing a select element value with arrow keys triggers immediate form submission, which is a context change the user did not initiate.</div>
+        <div class="issue-section-title">Affected pages</div>
+        <ul class="examples-list">
+          <li>/hr/novosti and news filter pages — year/category selects use onchange="runFireSubmit(this)"</li>
+          <li>/hr/stranice/javna-nabava/arhiva — procurement archive filters</li>
+          <li>/hr/stranice/javna-nabava/javne-nabave — procurement list filters</li>
+          <li>/hr/stranice/o-nama/zaposljavanja — employment search</li>
+        </ul>
+        <div class="issue-section-title">How to fix</div>
+        <div class="fix-box">Add a visible <strong>&lt;button type="submit"&gt;Pretraži&lt;/button&gt;</strong> to each filter form. Remove the onchange auto-submit behaviour. The submit button gives keyboard users a predictable point of control and avoids unexpected context changes.</div>
+      </div>
+    </div>
+
+    <!-- 7. FORM NO LABEL -->
+    <div class="issue-row" data-impact="serious">
+      <div class="issue-header" onclick="toggleIssue(this)">
+        <span class="badge serious">Serious</span>
+        <span class="issue-name">Form fields missing labels</span>
+        <span class="issue-wcag">1.3.1 / 4.1.2</span>
+        <span class="issue-pages"><strong>8</strong><br>pages</span>
+        <span class="expand-icon">▼ EXPAND</span>
+      </div>
+      <div class="issue-body">
+        <div class="issue-desc">Every form input must have a programmatically associated label. Placeholder text disappears on input and is not a substitute for a label element.</div>
+        <div class="issue-section-title">Examples</div>
+        <ul class="examples-list">
+          <li>EU projects search: &lt;input placeholder="Pretražite sve projekte" name="search_projects"&gt; — no label</li>
+          <li>Procurement search: &lt;input placeholder="Pretraži po nazivu" id="search_term"&gt; — no label</li>
+          <li>Spending info page: hidden input id="payee-name-disabled" — no label</li>
+          <li>Employment search input — no label</li>
+        </ul>
+        <div class="issue-section-title">How to fix</div>
+        <div class="fix-box">Add <strong>&lt;label for="search_projects"&gt;Pretraži projekte&lt;/label&gt;</strong> before each input, or add <strong>aria-label="Pretraži projekte"</strong> directly on the input element. If the label should be visually hidden, use a CSS visually-hidden class rather than removing it entirely.</div>
+      </div>
+    </div>
+
+    <!-- 8. ARIA COMMAND NAME -->
+    <div class="issue-row" data-impact="serious">
+      <div class="issue-header" onclick="toggleIssue(this)">
+        <span class="badge serious">Serious</span>
+        <span class="issue-name">ARIA role="button" element has no name</span>
+        <span class="issue-wcag">4.1.2</span>
+        <span class="issue-pages"><strong>1</strong><br>page</span>
+        <span class="expand-icon">▼ EXPAND</span>
+      </div>
+      <div class="issue-body">
+        <div class="issue-desc">Elements with role="button" must have an accessible name. Found on the Contact page in the embedded Google Maps widget.</div>
+        <div class="issue-section-title">Affected element</div>
+        <div class="code-block"><span class="tag">&lt;div</span> <span class="attr">title</span>=<span class="val">""</span> <span class="attr">role</span>=<span class="val">"button"</span> <span class="attr">tabindex</span>=<span class="val">"0"</span><span class="tag">&gt;</span><br>  &lt;img alt="" ...&gt;  <span class="tag">&lt;!-- location pin marker, title is empty --&gt;</span><br><span class="tag">&lt;/div&gt;</span></div>
+        <div class="issue-section-title">How to fix</div>
+        <div class="fix-box">This is generated by the Google Maps JavaScript API. Fix by configuring the marker with a <strong>title</strong> property when creating it: <code>new google.maps.Marker({ title: 'Lokacija Hrvatskih cesta' })</code>. This will populate the title attribute on the marker element.</div>
+      </div>
+    </div>
+
+    <!-- 9. LIST STRUCTURE -->
+    <div class="issue-row" data-impact="serious">
+      <div class="issue-header" onclick="toggleIssue(this)">
+        <span class="badge serious">Serious</span>
+        <span class="issue-name">Invalid list structure</span>
+        <span class="issue-wcag">1.3.1</span>
+        <span class="issue-pages"><strong>1</strong><br>page</span>
+        <span class="expand-icon">▼ EXPAND</span>
+      </div>
+      <div class="issue-body">
+        <div class="issue-desc">List elements (&lt;ul&gt;, &lt;ol&gt;) must only directly contain &lt;li&gt; elements. A nested &lt;ul&gt; without a parent &lt;li&gt; is invalid HTML and breaks screen reader list navigation.</div>
+        <div class="issue-section-title">Affected page</div>
+        <div class="code-block">/hr/stranice/drustvena-odgovornost/dokumenti/17-sponzorstva-i-donacije<br><br><span class="tag">&lt;ul</span> <span class="attr">class</span>=<span class="val">"outlined-list"</span><span class="tag">&gt;</span><br>  <span class="tag">&lt;ul</span> <span class="attr">class</span>=<span class="val">"outlined-list"</span><span class="tag">&gt;</span>  <span class="tag">&lt;!-- ❌ ul directly inside ul --&gt;</span><br>    <span class="tag">&lt;li&gt;</span>...<span class="tag">&lt;/li&gt;</span><br>  <span class="tag">&lt;/ul&gt;</span><br><span class="tag">&lt;/ul&gt;</span></div>
+        <div class="issue-section-title">How to fix</div>
+        <div class="fix-box">Wrap the inner &lt;ul&gt; in a &lt;li&gt; element: <strong>&lt;ul&gt;&lt;li&gt;&lt;ul&gt;&lt;li&gt;...&lt;/li&gt;&lt;/ul&gt;&lt;/li&gt;&lt;/ul&gt;</strong>. This is likely a content authoring error in the CMS rich text editor.</div>
+      </div>
+    </div>
+
+    <!-- 10. IFRAME NO TITLE -->
+    <div class="issue-row" data-impact="serious">
+      <div class="issue-header" onclick="toggleIssue(this)">
+        <span class="badge serious">Serious</span>
+        <span class="issue-name">iframe missing title attribute</span>
+        <span class="issue-wcag">2.4.1</span>
+        <span class="issue-pages"><strong>1</strong><br>page</span>
+        <span class="expand-icon">▼ EXPAND</span>
+      </div>
+      <div class="issue-body">
+        <div class="issue-desc">iframe elements must have a title attribute to identify their purpose to screen reader users who navigate by frames.</div>
+        <div class="issue-section-title">Affected element</div>
+        <div class="code-block">/hr/stranice/kontakt — reCAPTCHA widget<br><br><span class="tag">&lt;iframe</span> <span class="attr">style</span>=<span class="val">"display: none;"</span><span class="tag">&gt;&lt;/iframe&gt;</span><br><span class="tag">&lt;!-- hidden reCAPTCHA iframe, no title attribute --&gt;</span></div>
+        <div class="issue-section-title">How to fix</div>
+        <div class="fix-box">The reCAPTCHA widget generates this hidden iframe. Add <strong>title="reCAPTCHA security"</strong> to the iframe. If using Google's reCAPTCHA script directly, this may require a post-render DOM patch or upgrading to a version that handles this.</div>
+      </div>
+    </div>
+
+    <!-- 11. EMPTY HEADING -->
+    <div class="issue-row" data-impact="moderate">
+      <div class="issue-header" onclick="toggleIssue(this)">
+        <span class="badge moderate">Moderate</span>
+        <span class="issue-name">Empty heading elements</span>
+        <span class="issue-wcag">1.3.1</span>
+        <span class="issue-pages"><strong>1</strong><br>page</span>
+        <span class="expand-icon">▼ EXPAND</span>
+      </div>
+      <div class="issue-body">
+        <div class="issue-desc">Heading elements with no text content confuse screen reader users who navigate by headings, and suggest structural errors in the page template.</div>
+        <div class="issue-section-title">Affected elements</div>
+        <div class="code-block">/hr/stranice/kontakt — contact info cards section<br><br><span class="tag">&lt;h4</span> <span class="attr">class</span>=<span class="val">"contact-info-card__heading"</span><span class="tag">&gt;&lt;/h4&gt;</span>  <span class="tag">&lt;!-- appears twice --&gt;</span></div>
+        <div class="issue-section-title">How to fix</div>
+        <div class="fix-box">Either remove the empty &lt;h4&gt; elements if they serve no purpose, or populate them with appropriate heading text. Check the contact info card component template — the headings likely exist as placeholders for content that was not entered.</div>
+      </div>
+    </div>
+
+    <!-- 12. ALIGN ATTR -->
+    <div class="issue-row" data-impact="moderate">
+      <div class="issue-header" onclick="toggleIssue(this)">
+        <span class="badge moderate">Moderate</span>
+        <span class="issue-name">Deprecated align="" attribute</span>
+        <span class="issue-wcag">1.3.1</span>
+        <span class="issue-pages"><strong>5</strong><br>pages</span>
+        <span class="expand-icon">▼ EXPAND</span>
+      </div>
+      <div class="issue-body">
+        <div class="issue-desc">The align="" attribute is obsolete in HTML5 and conveys presentational information in markup rather than CSS. This indicates content pasted directly from Word documents into the CMS rich text editor.</div>
+        <div class="issue-section-title">Affected pages</div>
+        <ul class="examples-list">
+          <li>/hr/stranice/zahtjevi-i-suglasnosti/izvanredni-prijevoz/4 — fee table with align="center" on all cells</li>
+          <li>/hr/projekti/1-multimodalna-platforma-... — align="justify" on all paragraphs</li>
+          <li>/hr/eu-projekti/projekti/55, /7-napcore-x, /43 — align="justify" paragraphs</li>
+        </ul>
+        <div class="issue-section-title">How to fix</div>
+        <div class="fix-box">Configure the CMS rich text editor (likely a WYSIWYG like TinyMCE or similar) to <strong>strip the align attribute on paste</strong> and replace it with CSS text-align. For existing content, a one-time find-replace on the database or a CSS rule to override the attribute is the quickest fix: <code>p[align], td[align] { text-align: revert; }</code></div>
+      </div>
+    </div>
+
+    <!-- 13. TEXTAREA NO LABEL (reCAPTCHA) -->
+    <div class="issue-row" data-impact="serious">
+      <div class="issue-header" onclick="toggleIssue(this)">
+        <span class="badge serious">Serious</span>
+        <span class="issue-name">reCAPTCHA textarea has no accessible name</span>
+        <span class="issue-wcag">4.1.2</span>
+        <span class="issue-pages"><strong>1</strong><br>page</span>
+        <span class="expand-icon">▼ EXPAND</span>
+      </div>
+      <div class="issue-body">
+        <div class="issue-desc">A hidden textarea generated by reCAPTCHA (id="g-recaptcha-response") has no associated label. While hidden visually, it is not hidden from assistive technologies.</div>
+        <div class="issue-section-title">Affected element</div>
+        <div class="code-block">/hr/stranice/kontakt<br><br><span class="tag">&lt;textarea</span> <span class="attr">id</span>=<span class="val">"g-recaptcha-response"</span> <span class="attr">name</span>=<span class="val">"g-recaptcha-response"</span><br>  <span class="attr">style</span>=<span class="val">"display:none"</span><span class="tag">&gt;&lt;/textarea&gt;</span></div>
+        <div class="issue-section-title">How to fix</div>
+        <div class="fix-box">Add <strong>aria-hidden="true"</strong> to the reCAPTCHA textarea since it is hidden and not intended for user interaction. This removes it from the accessibility tree. Alternatively, add aria-label="reCAPTCHA response" if it must remain in the tree.</div>
+      </div>
+    </div>
+
+  </div><!-- end issues-grid -->
+
+  <!-- REMEDIATION PRIORITY -->
+  <div class="section-label">Recommended Remediation Order</div>
+  <div class="finding-card" style="margin-bottom: 48px;">
+    <div class="finding-body" style="line-height: 2;">
+      <strong style="color: var(--critical);">P1 — Fix immediately (site-wide, highest impact):</strong><br>
+      1. Duplicate SVG IDs in nav flags (fix all 1,675 violations by ~400 across all pages)<br>
+      2. Add aria-labels to accessibility widget buttons (fixes ~315 violations across all pages)<br>
+      3. Fix colour contrast in page header and cookie banner (most visible failures)<br>
+      <br>
+      <strong style="color: var(--serious);">P2 — Fix next sprint (functional accessibility):</strong><br>
+      4. Add submit buttons to all filter forms<br>
+      5. Add labels to all search inputs<br>
+      6. Add captions/transcript to the NAPCORE video<br>
+      7. Fix the contact form dropdown contrast (1:1 ratio — currently invisible)<br>
+      <br>
+      <strong style="color: var(--moderate);">P3 — Fix in backlog (lower impact):</strong><br>
+      8. Fix list structure on sponzorstva page<br>
+      9. Add title to Google Maps marker<br>
+      10. Fix empty headings on contact page<br>
+      11. Add reCAPTCHA textarea aria-hidden<br>
+      12. Fix deprecated align="" attributes (CMS config change)<br>
+      13. Add iframe title to reCAPTCHA iframe<br>
+      <br>
+      <strong style="color: var(--text-muted);">Not covered by this automated audit (requires manual testing):</strong><br>
+      Focus indicator visibility • Keyboard navigation order • Screen reader quality of announcements • PDF document accessibility • Mobile touch target sizes • Reflow at 320px width
+    </div>
+  </div>
+
+</div><!-- end main -->
+
+<footer>
+  <span>Generated: 29 April 2026 &nbsp;·&nbsp; Pa11y CI v6 + axe-core 4.11 + htmlcs</span>
+  <span>105 pages scanned &nbsp;·&nbsp; /hr language &nbsp;·&nbsp; WCAG 2.1 AA</span>
+</footer>
+
+<script>
+function toggleIssue(header) {
+  const row = header.parentElement;
+  const body = row.querySelector('.issue-body');
+  const icon = header.querySelector('.expand-icon');
+  const isOpen = body.classList.toggle('open');
+  row.classList.toggle('open', isOpen);
+  icon.textContent = isOpen ? '▲ CLOSE' : '▼ EXPAND';
 }
 
-/* For large text (18pt+ or 14pt bold+) */
-.large-text {
-  color: #949494; /* 3:1 ratio acceptable for large text */
-}`
-            },
-            'color-contrast-enhanced': {
-                description: 'For WCAG AAA compliance, text must have enhanced color contrast (7:1 for normal text, 4.5:1 for large text).',
-                fix: `/* Enhanced contrast for AAA compliance */
-.high-contrast {
-  color: #595959; /* 7:1 ratio against white */
-  background: #ffffff;
+function filterIssues(impact, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.issue-row').forEach(row => {
+    if (impact === 'all' || row.dataset.impact === impact) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
 }
-
-/* Consider offering a high-contrast mode */
-@media (prefers-contrast: more) {
-  body {
-    --text-color: #000000;
-    --bg-color: #ffffff;
-  }
-}`
-            },
-            'link-name': {
-                description: 'Links must have discernible text that describes their destination. Avoid generic text like "click here" or "read more".',
-                fix: `<!-- Add descriptive link text -->
-<a href="/products">View our products</a>
-
-<!-- For image links, add alt text -->
-<a href="/home">
-  <img src="logo.png" alt="Company Name - Home">
-</a>
-
-<!-- For icon links, use aria-label -->
-<a href="https://twitter.com" aria-label="Follow us on Twitter">
-  <svg>...</svg>
-</a>`
-            },
-            'image-alt': {
-                description: 'Images must have alternative text that describes their content or purpose. Decorative images should have empty alt="".',
-                fix: `<!-- Informative images need descriptive alt -->
-<img src="chart.png" alt="Sales increased 25% in Q4 2025">
-
-<!-- Decorative images use empty alt -->
-<img src="decorative-border.png" alt="">
-
-<!-- Complex images may need longer descriptions -->
-<figure>
-  <img src="diagram.png" alt="Network architecture diagram" aria-describedby="diagram-desc">
-  <figcaption id="diagram-desc">Detailed description of the network...</figcaption>
-</figure>`
-            },
-            'region': {
-                description: 'All page content should be contained within landmark regions (header, nav, main, footer, etc.) to help screen reader users navigate.',
-                fix: `<!-- Wrap content in landmark regions -->
-<header>
-  <nav aria-label="Main navigation">...</nav>
-</header>
-
-<main>
-  <article>...</article>
-  <aside>...</aside>
-</main>
-
-<footer>...</footer>
-
-<!-- Or use ARIA roles -->
-<div role="banner">...</div>
-<div role="navigation">...</div>
-<div role="main">...</div>
-<div role="contentinfo">...</div>`
-            },
-            'heading-order': {
-                description: 'Headings must be in a logical, sequential order (h1 → h2 → h3) without skipping levels. This helps users understand page structure.',
-                fix: `<!-- Correct heading hierarchy -->
-<h1>Page Title</h1>
-  <h2>Section 1</h2>
-    <h3>Subsection 1.1</h3>
-    <h3>Subsection 1.2</h3>
-  <h2>Section 2</h2>
-    <h3>Subsection 2.1</h3>
-
-<!-- Don't skip levels like this -->
-<!-- ❌ <h1>Title</h1> <h3>Section</h3> -->
-
-<!-- Use CSS for styling, not heading levels -->
-<h2 class="small-heading">Still an h2</h2>`
-            },
-            'empty-heading': {
-                description: 'Headings must have visible text content. Empty headings confuse screen reader users and break document structure.',
-                fix: `<!-- Add text content to headings -->
-<h2>Section Title</h2>
-
-<!-- If heading contains only an image -->
-<h2>
-  <img src="icon.png" alt="">
-  Products
-</h2>
-
-<!-- Or remove empty headings entirely -->
-<!-- ❌ <h2></h2> -->
-<!-- ❌ <h2>   </h2> -->`
-            },
-            'landmark-one-main': {
-                description: 'Pages must have exactly one main landmark to identify the primary content area for screen reader users.',
-                fix: `<!-- Add a main landmark -->
-<main>
-  <h1>Page Title</h1>
-  <p>Primary page content...</p>
-</main>
-
-<!-- Or use role="main" -->
-<div role="main">
-  <h1>Page Title</h1>
-  ...
-</div>
-
-<!-- Ensure only ONE main per page -->`
-            },
-            'landmark-unique': {
-                description: 'Landmarks of the same type must have unique labels so screen reader users can distinguish between them.',
-                fix: `<!-- Use aria-label to differentiate -->
-<nav aria-label="Main navigation">...</nav>
-<nav aria-label="Footer navigation">...</nav>
-
-<!-- Or use aria-labelledby -->
-<nav aria-labelledby="nav-title">
-  <h2 id="nav-title">Product Categories</h2>
-  ...
-</nav>`
-            },
-            'page-has-heading-one': {
-                description: 'Pages should have an h1 heading that describes the page content. This helps users understand the page purpose.',
-                fix: `<!-- Add an h1 as the first heading -->
-<main>
-  <h1>About Our Company</h1>
-  <p>Content...</p>
-</main>
-
-<!-- Only one h1 per page is recommended -->
-<!-- The h1 should describe the page's main topic -->`
-            },
-            'list': {
-                description: 'Lists must be properly structured with ul/ol containing only li elements (or script/template elements).',
-                fix: `<!-- Correct list structure -->
-<ul>
-  <li>Item 1</li>
-  <li>Item 2</li>
-  <li>Item 3</li>
-</ul>
-
-<!-- Don't put non-li elements directly in ul/ol -->
-<!-- ❌ <ul><div>Item</div></ul> -->
-<!-- ❌ <ul><a href="#">Link</a></ul> -->
-
-<!-- Links go inside li -->
-<ul>
-  <li><a href="#">Link 1</a></li>
-  <li><a href="#">Link 2</a></li>
-</ul>`
-            },
-            'listitem': {
-                description: 'List items (li) must be contained within ul or ol elements to maintain proper list semantics.',
-                fix: `<!-- li must be inside ul or ol -->
-<ul>
-  <li>Item 1</li>
-  <li>Item 2</li>
-</ul>
-
-<!-- Or use role="list" on parent -->
-<div role="list">
-  <div role="listitem">Item 1</div>
-  <div role="listitem">Item 2</div>
-</div>
-
-<!-- ❌ Don't use li outside of lists -->
-<!-- <div><li>Orphaned item</li></div> -->`
-            },
-            'image-redundant-alt': {
-                description: 'Image alt text should not duplicate adjacent text content. This creates unnecessary repetition for screen reader users.',
-                fix: `<!-- Avoid duplicating adjacent text -->
-<!-- ❌ Bad: -->
-<img src="product.jpg" alt="Widget Pro">
-<h3>Widget Pro</h3>
-
-<!-- ✓ Good: -->
-<img src="product.jpg" alt="">
-<h3>Widget Pro</h3>
-
-<!-- Or provide additional context -->
-<img src="product.jpg" alt="Widget Pro in blue finish">
-<h3>Widget Pro</h3>`
-            },
-            'link-in-text-block': {
-                description: 'Links within text blocks must be distinguishable by more than just color (e.g., underline, bold, icon) for users who cannot perceive color.',
-                fix: `/* Add underline or other visual indicator */
-a {
-  text-decoration: underline;
-}
-
-/* Or use other distinguishing features */
-a {
-  text-decoration: none;
-  border-bottom: 2px solid currentColor;
-  font-weight: bold;
-}
-
-/* Ensure hover/focus states are also distinct */
-a:hover, a:focus {
-  text-decoration: underline;
-  outline: 2px solid;
-}`
-            }
-        };
-
-        // Global state
-        let reportData = null;
-        let processedData = null;
-
-        // DOM Elements
-        const uploadSection = document.getElementById('uploadSection');
-        const fileInput = document.getElementById('fileInput');
-        const dashboard = document.getElementById('dashboard');
-        const filterBar = document.getElementById('filterBar');
-        const issuesContainer = document.getElementById('issuesContainer');
-        const siteWideSection = document.getElementById('siteWideSection');
-        const siteWideIssues = document.getElementById('siteWideIssues');
-        const pagesContainer = document.getElementById('pagesContainer');
-        const reportMeta = document.getElementById('reportMeta');
-        const statsGrid = document.getElementById('statsGrid');
-        const topRulesContent = document.getElementById('topRulesContent');
-        const siteWideBadge = document.getElementById('siteWideBadge');
-        const pagesBadge = document.getElementById('pagesBadge');
-        const severityFilter = document.getElementById('severityFilter');
-        const ruleFilter = document.getElementById('ruleFilter');
-        const searchInput = document.getElementById('searchInput');
-
-        // Load report from URL parameter or default file
-        async function loadReportFromUrl() {
-            const params = new URLSearchParams(window.location.search);
-            const reportUrl = params.get('report');
-            
-            if (reportUrl) {
-                try {
-                    const response = await fetch(reportUrl);
-                    if (response.ok) {
-                        reportData = await response.json();
-                        processReport();
-                        return true;
-                    }
-                } catch (e) {
-                    console.error('Failed to load report from URL:', e);
-                }
-            }
-            
-            // Try loading default report.json if no URL parameter
-            try {
-                const response = await fetch('report.json');
-                if (response.ok) {
-                    reportData = await response.json();
-                    processReport();
-                    return true;
-                }
-            } catch (e) {
-                // No default report, show upload UI
-                console.log('No default report found, showing upload UI');
-            }
-            
-            return false;
-        }
-
-        // Initialize - try to load report from URL or default
-        loadReportFromUrl();
-
-        // File upload handler
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    reportData = JSON.parse(event.target.result);
-                    processReport();
-                } catch (error) {
-                    alert('Error parsing JSON file. Please ensure it\'s a valid axe DevTools export.');
-                    console.error(error);
-                }
-            };
-            reader.readAsText(file);
-        });
-
-        // Process the report data
-        function processReport() {
-            if (!reportData || !reportData.allIssues) {
-                alert('Invalid report format. Missing allIssues array.');
-                return;
-            }
-
-            // Get all unique pages
-            const pages = [...new Set(reportData.allIssues.map(i => i.testUrl))];
-            const totalPages = pages.length;
-
-            // Dedupe issues per page
-            const issuesByPage = {};
-            const issueSignatures = {}; // Track which pages each issue appears on
-
-            reportData.allIssues.forEach(issue => {
-                const pageUrl = issue.testUrl;
-                const signature = `${issue.ruleId}|${JSON.stringify(issue.selector)}`;
-
-                // Track pages for each signature
-                if (!issueSignatures[signature]) {
-                    issueSignatures[signature] = {
-                        pages: new Set(),
-                        issue: issue
-                    };
-                }
-                issueSignatures[signature].pages.add(pageUrl);
-
-                // Group by page with deduplication
-                if (!issuesByPage[pageUrl]) {
-                    issuesByPage[pageUrl] = new Map();
-                }
-
-                if (!issuesByPage[pageUrl].has(signature)) {
-                    issuesByPage[pageUrl].set(signature, issue);
-                }
-            });
-
-            // Identify site-wide issues (present on ALL pages)
-            const siteWideIssuesList = [];
-            const siteWideSignatures = new Set();
-
-            Object.entries(issueSignatures).forEach(([signature, data]) => {
-                if (data.pages.size === totalPages) {
-                    siteWideIssuesList.push({
-                        ...data.issue,
-                        affectedPages: [...data.pages]
-                    });
-                    siteWideSignatures.add(signature);
-                }
-            });
-
-            // Remove site-wide issues from page-specific lists
-            Object.keys(issuesByPage).forEach(pageUrl => {
-                siteWideSignatures.forEach(sig => {
-                    issuesByPage[pageUrl].delete(sig);
-                });
-            });
-
-            // Convert Maps to arrays and sort by severity
-            const severityOrder = { critical: 0, serious: 1, moderate: 2, minor: 3 };
-            Object.keys(issuesByPage).forEach(pageUrl => {
-                issuesByPage[pageUrl] = [...issuesByPage[pageUrl].values()].sort((a, b) => 
-                    severityOrder[a.impact] - severityOrder[b.impact]
-                );
-            });
-
-            siteWideIssuesList.sort((a, b) => severityOrder[a.impact] - severityOrder[b.impact]);
-
-            // Count issues by severity
-            const severityCounts = { critical: 0, serious: 0, moderate: 0, minor: 0 };
-            const ruleCounts = {};
-
-            reportData.allIssues.forEach(issue => {
-                severityCounts[issue.impact] = (severityCounts[issue.impact] || 0) + 1;
-                ruleCounts[issue.ruleId] = (ruleCounts[issue.ruleId] || 0) + 1;
-            });
-
-            // Get unique rules for filter
-            const uniqueRules = Object.keys(ruleCounts).sort();
-
-            // Store processed data
-            processedData = {
-                pages,
-                totalPages,
-                issuesByPage,
-                siteWideIssues: siteWideIssuesList,
-                severityCounts,
-                ruleCounts,
-                uniqueRules,
-                testName: reportData.testDetails?.testName || 'Accessibility Report',
-                standard: reportData.standard,
-                startDate: reportData.testingStartDate,
-                endDate: reportData.testingEndDate,
-                totalIssues: reportData.allIssues.length
-            };
-
-            renderReport();
-        }
-
-        // Render the report
-        function renderReport() {
-            if (!processedData) return;
-
-            // Hide upload, show report
-            uploadSection.classList.add('hidden');
-            dashboard.classList.add('visible');
-            filterBar.classList.add('visible');
-            issuesContainer.classList.add('visible');
-
-            // Render meta info
-            const startDate = new Date(processedData.startDate).toLocaleDateString();
-            reportMeta.innerHTML = `
-                <strong>${processedData.testName}</strong> | 
-                ${processedData.standard} | 
-                Tested: ${startDate} | 
-                ${processedData.totalPages} pages
-            `;
-
-            // Render stats
-            statsGrid.innerHTML = `
-                <div class="stat-card">
-                    <div class="number">${processedData.totalIssues}</div>
-                    <div class="label">Total Issues</div>
-                </div>
-                <div class="stat-card critical">
-                    <div class="number">${processedData.severityCounts.critical || 0}</div>
-                    <div class="label">Critical</div>
-                </div>
-                <div class="stat-card serious">
-                    <div class="number">${processedData.severityCounts.serious || 0}</div>
-                    <div class="label">Serious</div>
-                </div>
-                <div class="stat-card moderate">
-                    <div class="number">${processedData.severityCounts.moderate || 0}</div>
-                    <div class="label">Moderate</div>
-                </div>
-                <div class="stat-card minor">
-                    <div class="number">${processedData.severityCounts.minor || 0}</div>
-                    <div class="label">Minor</div>
-                </div>
-            `;
-
-            // Render top rules
-            const topRules = Object.entries(processedData.ruleCounts)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5);
-            const maxCount = topRules[0]?.[1] || 1;
-
-            topRulesContent.innerHTML = topRules.map(([rule, count]) => `
-                <div class="rule-bar">
-                    <span class="rule-name">${rule}</span>
-                    <div class="bar-container">
-                        <div class="bar" style="width: ${(count / maxCount) * 100}%">${count}</div>
-                    </div>
-                </div>
-            `).join('');
-
-            // Populate rule filter
-            ruleFilter.innerHTML = '<option value="all">All Rules</option>' +
-                processedData.uniqueRules.map(rule => 
-                    `<option value="${rule}">${rule}</option>`
-                ).join('');
-
-            // Render site-wide issues
-            renderSiteWideIssues();
-
-            // Render page sections
-            renderPageSections();
-        }
-
-        // Render site-wide issues
-        function renderSiteWideIssues() {
-            const issues = getFilteredIssues(processedData.siteWideIssues);
-            siteWideBadge.textContent = issues.length;
-
-            if (issues.length === 0) {
-                siteWideSection.style.display = 'none';
-                return;
-            }
-
-            siteWideSection.style.display = 'block';
-            siteWideIssues.innerHTML = issues.map(issue => renderIssueCard(issue, true)).join('');
-        }
-
-        // Render page sections
-        function renderPageSections() {
-            const severity = severityFilter.value;
-            const rule = ruleFilter.value;
-            const search = searchInput.value.toLowerCase();
-
-            let pagesWithIssues = 0;
-            let html = '';
-
-            processedData.pages.forEach(pageUrl => {
-                const issues = getFilteredIssues(processedData.issuesByPage[pageUrl] || []);
-                
-                if (issues.length === 0) return;
-                pagesWithIssues++;
-
-                html += `
-                    <div class="page-section" data-url="${escapeHtml(pageUrl)}">
-                        <div class="page-header" onclick="togglePageSection(this)">
-                            <span class="page-url">${escapeHtml(pageUrl)}</span>
-                            <div class="page-stats">
-                                <span class="issue-count">${issues.length} issues</span>
-                                <span class="chevron">▼</span>
-                            </div>
-                        </div>
-                        <div class="page-issues">
-                            ${issues.map(issue => renderIssueCard(issue, false)).join('')}
-                        </div>
-                    </div>
-                `;
-            });
-
-            pagesBadge.textContent = `${pagesWithIssues} pages`;
-            pagesContainer.innerHTML = html || '<div class="empty-state"><h3>No issues found</h3><p>No issues match the current filters.</p></div>';
-        }
-
-        // Get filtered issues based on current filter state
-        function getFilteredIssues(issues) {
-            const severity = severityFilter.value;
-            const rule = ruleFilter.value;
-            const search = searchInput.value.toLowerCase();
-
-            return issues.filter(issue => {
-                if (severity !== 'all' && issue.impact !== severity) return false;
-                if (rule !== 'all' && issue.ruleId !== rule) return false;
-                if (search) {
-                    const selectorStr = Array.isArray(issue.selector) ? issue.selector.join(' ') : issue.selector;
-                    const searchableText = `${issue.source} ${selectorStr} ${issue.ruleId} ${issue.description}`.toLowerCase();
-                    if (!searchableText.includes(search)) return false;
-                }
-                return true;
-            });
-        }
-
-        // Render individual issue card
-        function renderIssueCard(issue, isSiteWide) {
-            const fix = fixRecommendations[issue.ruleId] || {
-                description: issue.help,
-                fix: '/* No specific fix recommendation available.\n   See the help link for guidance. */'
-            };
-
-            const selectorStr = Array.isArray(issue.selector) ? issue.selector.join(' → ') : issue.selector;
-
-            return `
-                <div class="issue-card ${issue.impact}">
-                    <div class="issue-header">
-                        <div class="issue-title">
-                            <span class="rule-id">${escapeHtml(issue.ruleId)}</span>
-                            <span class="impact-badge ${issue.impact}">${issue.impact}</span>
-                        </div>
-                        <div class="issue-actions">
-                            ${issue.screenshotURL ? `<a href="${escapeHtml(issue.screenshotURL)}" target="_blank">📷 View Screenshot</a>` : ''}
-                            <a href="${escapeHtml(issue.helpUrl)}" target="_blank">📖 Learn More</a>
-                        </div>
-                    </div>
-                    
-                    <p class="issue-description">${escapeHtml(issue.description)}</p>
-                    
-                    <div class="issue-element">
-                        <label>Affected Element</label>
-                        <pre>${escapeHtml(issue.source)}</pre>
-                    </div>
-                    
-                    <div class="issue-selector">
-                        <strong>Selector:</strong> ${escapeHtml(selectorStr)}
-                    </div>
-                    
-                    <div class="fix-recommendation">
-                        <h4>How to Fix</h4>
-                        <p>${escapeHtml(fix.description)}</p>
-                        <pre>${escapeHtml(fix.fix)}</pre>
-                    </div>
-                    
-                    ${isSiteWide && issue.affectedPages ? `
-                        <details class="affected-pages">
-                            <summary>Affects all ${issue.affectedPages.length} tested pages</summary>
-                            <ul>
-                                ${issue.affectedPages.map(url => `<li>${escapeHtml(url)}</li>`).join('')}
-                            </ul>
-                        </details>
-                    ` : ''}
-                </div>
-            `;
-        }
-
-        // Toggle page section
-        function togglePageSection(header) {
-            header.classList.toggle('expanded');
-            const issues = header.nextElementSibling;
-            issues.classList.toggle('visible');
-        }
-
-        // Escape HTML
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Filter handlers
-        severityFilter.addEventListener('change', applyFilters);
-        ruleFilter.addEventListener('change', applyFilters);
-        searchInput.addEventListener('input', debounce(applyFilters, 300));
-
-        function applyFilters() {
-            renderSiteWideIssues();
-            renderPageSections();
-        }
-
-        // Debounce utility
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        // Expand/Collapse all
-        document.getElementById('expandAllBtn').addEventListener('click', () => {
-            document.querySelectorAll('.page-header').forEach(header => {
-                header.classList.add('expanded');
-                header.nextElementSibling.classList.add('visible');
-            });
-        });
-
-        document.getElementById('collapseAllBtn').addEventListener('click', () => {
-            document.querySelectorAll('.page-header').forEach(header => {
-                header.classList.remove('expanded');
-                header.nextElementSibling.classList.remove('visible');
-            });
-        });
-
-        // Reset filters
-        document.getElementById('resetFiltersBtn').addEventListener('click', () => {
-            severityFilter.value = 'all';
-            ruleFilter.value = 'all';
-            searchInput.value = '';
-            applyFilters();
-        });
-
-        // Export PDF
-        document.getElementById('exportPdfBtn').addEventListener('click', () => {
-            // Expand all sections before printing
-            document.querySelectorAll('.page-header').forEach(header => {
-                header.classList.add('expanded');
-                header.nextElementSibling.classList.add('visible');
-            });
-            
-            // Expand all affected pages details
-            document.querySelectorAll('.affected-pages').forEach(details => {
-                details.setAttribute('open', '');
-            });
-            
-            // Trigger print dialog
-            window.print();
-        });
-    </script>
+</script>
 </body>
 </html>
